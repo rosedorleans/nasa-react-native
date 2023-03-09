@@ -1,40 +1,79 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
-import { StyleSheet, View, Text, ActivityIndicator } from "react-native";
+import { StyleSheet, View, Text, ActivityIndicator, Image } from "react-native";
 import axios from "axios";
 
 import { NavigationContainer } from "@react-navigation/native";
+import { createStackNavigator } from "@react-navigation/stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 
-function HomeScreen() {
-  const baseUrl =
-    "https://api.nasa.gov/planetary/apod?api_key=AvYWVei9BhfrRoU5yrLLfCacbmxVgZhmVXuG0nbJ";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
-  let [isLoading, setIsLoading] = useState(true);
+const Stack = createStackNavigator();
+
+function HomeScreen() {
   let [response, setResponse] = useState();
 
-  const getContent = () => {
-    if (isLoading) {
-      return <ActivityIndicator size="large" />;
-    }
+  React.useEffect(() => {
+    axios.get("https://api.nasa.gov/planetary/apod", {
+        params: {
+          api_key: "QanO544xGGLPtndgU0a68zZEs83Xy70yLBQS886O",
+        },
+      })
+      .then(function (response) {
+        console.log(response.data);
+        const url = response.data.url;
+        console.log(url);
+        setResponse(url);
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+  }, []);
 
-    axios.get(`${baseUrl}`).then((response) => {
-      setIsLoading(false);
-      console.log(response.data);
-      return <Text>Image du jour : 
-				<img src={response.data.url} alt="" />
-			</Text>;
-    });
-  };
-
-  return <View style={styles.container}>{getContent()}</View>;
+  return (
+    <View>
+      <Image
+        style={{ width: "100%", height: 200 }}
+        source={{ uri: response }}
+      />
+    </View>
+  ); 
 }
 
-function ListeScreen() {
+function ListScreen() {
   return (
-    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+    <View style={styles.container}>
       <Text>Liste</Text>
     </View>
+  );
+}
+
+function Nasa() {
+  return (
+    <Tab.Navigator
+    // screenOptions={({ route }) => ({
+    // 	tabBarIcon: ({ focused, color, size }) => {
+    // 		let iconName;
+
+    // 		if (route.name === 'Home') {
+    // 			iconName = focused
+    // 				? 'ios-information-circle'
+    // 				: 'ios-information-circle-outline';
+    // 		} else if (route.name === 'Liste') {
+    // 			iconName = focused ? 'ios-list' : 'ios-list-outline';
+    // 		}
+
+    // 		return <Ionicons name={iconName} size={size} color={color} />;
+    // 	},
+    // 	tabBarActiveTintColor: 'tomato',
+    // 	tabBarInactiveTintColor: 'gray',
+    // })}
+    >
+      <Tab.Screen name="Home" component={HomeScreen} />
+
+      <Tab.Screen name="Liste" component={ListScreen} />
+    </Tab.Navigator>
   );
 }
 
@@ -43,10 +82,13 @@ const Tab = createBottomTabNavigator();
 export default function App() {
   return (
     <NavigationContainer>
-      <Tab.Navigator>
-        <Tab.Screen name="Home" component={HomeScreen} />
-        <Tab.Screen name="Liste" component={ListeScreen} />
-      </Tab.Navigator>
+      <Stack.Navigator>
+        <Stack.Screen
+          name="Nasa"
+          component={Nasa}
+          options={{ headerShown: false }}
+        />
+      </Stack.Navigator>
     </NavigationContainer>
   );
 }
