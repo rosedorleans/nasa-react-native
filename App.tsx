@@ -53,16 +53,16 @@ function ListScreen() {
     axios
       .get(listUrl)
       .then(function (response) {
+
         let T_images = [];
 
         response.data.forEach(function (item) {
-          // console.log(item.url)
-          // https://apod.nasa.gov/apod/image/2302/CrescentPoseiden_Chasiotis_1080.jpg
           T_images.push({
             id: item.url.split("/")[5],
             url: item.url,
             title: item.title,
             explanation: item.explanation,
+						date: item.date
           });
         });
         T_images = T_images.reverse();
@@ -85,7 +85,7 @@ function ListScreen() {
             <View>
               <Text style={styles.photoTitle}>{photo.title}</Text>
               <Text style={styles.photoExplanation}>{photo.explanation}</Text>
-              <Image style={styles.photo} source={{ uri: photo.url }} />
+              <Image style={styles.photo} source={{ uri: photo.url }} key={photo.id} />
             </View>
           ))}
       </ScrollView>
