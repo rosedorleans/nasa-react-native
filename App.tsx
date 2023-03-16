@@ -1,6 +1,12 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
-import { StyleSheet, View, Text, ScrollView } from "react-native";
+import { 
+  StyleSheet, 
+  View, 
+  Text, 
+  SafeAreaView,
+  FlatList,
+  ScrollView } from "react-native";
 import { Image } from "expo-image";
 import axios from "axios";
 
@@ -45,7 +51,7 @@ function HomeScreen() {
 }
 
 function ListScreen() {
-  let [response, setResponse] = useState();
+  let [response, setResponse] = useState([]);
   const listUrl =
     "https://api.nasa.gov/planetary/apod?api_key=AvYWVei9BhfrRoU5yrLLfCacbmxVgZhmVXuG0nbJ&start_date=2023-02-15";
 
@@ -58,7 +64,7 @@ function ListScreen() {
 
         response.data.forEach(function (item) {
           T_images.push({
-            id: item.url.split("/")[5],
+            id: item.id,
             url: item.url,
             title: item.title,
             explanation: item.explanation,
@@ -73,22 +79,25 @@ function ListScreen() {
         console.log(error);
       });
   }, []);
+  
+  console.log('item', response.length);
 
   return (
     <View style={styles.container}>
       <Text style={styles.viewTitle}>
         Images du jour {"\n"} (depuis le 15 février 2023) :
       </Text>
-      <ScrollView style={styles.scrollView}>
-        {response &&
-          response.map((photo) => (
+      <SafeAreaView style={styles.container}>
+        <FlatList
+          data={response}
+          renderItem={({item}) => 
             <View>
-              <Text style={styles.photoTitle}>{photo.title}</Text>
-              <Text style={styles.photoExplanation}>{photo.explanation}</Text>
-              <Image style={styles.photo} source={{ uri: photo.url }} key={photo.id} />
-            </View>
-          ))}
-      </ScrollView>
+              <Text style={styles.photoTitle}>{item.title}</Text>
+              <Text style={styles.photoExplanation}>{item.explanation}</Text>
+              <Image style={styles.photo} source={{ uri: item.url }} key={item.id} />
+            </View>}
+          keyExtractor={item => item.id}/>
+      </SafeAreaView>
     </View>
   );
 }
