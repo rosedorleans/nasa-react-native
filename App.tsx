@@ -147,11 +147,12 @@ function ListScreen() {
               <Text style={styles.photoDate}>{ Moment(activeItem.date).format('D MMMM y') }</Text>
                 <Text style={styles.photoTitle}>{activeItem.title}</Text>
                 <Text style={styles.modalText}>{ activeItem.explanation }</Text>
-                <Image style={styles.photo} source={{ uri: activeItem.url }} />
+                {console.log(activeItem)}
+                <Image style={styles.modalPhoto} source={{ uri: activeItem.url }}/>
                 <Pressable
                   style={[styles.button, styles.buttonClose]}
                   onPress={() => setModalVisible(!modalVisible)}>
-                  <Text style={styles.textStyle}>Hide Modal</Text>
+                  <Text style={styles.textStyle}>Fermer</Text>
                 </Pressable>
               </View>
             </View>)}
@@ -287,11 +288,17 @@ const styles = StyleSheet.create({
   },
   textStyle: {
     color: 'white',
+    fontSize: 12,
     fontWeight: 'bold',
     textAlign: 'center',
   },
   modalText: {
-    marginBottom: 15,
+    fontSize: 8,
     textAlign: 'center',
+  },
+  modalPhoto: {
+    height: 400,
+    width: 350,
+    margin: 20
   },
 });
