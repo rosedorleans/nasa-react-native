@@ -5,6 +5,10 @@ import {
   View, 
   Text, 
   SafeAreaView,
+  TouchableOpacity,
+  Pressable,
+  Modal,
+  Alert,
   FlatList,
   ScrollView } from "react-native";
 import { Image } from "expo-image";
@@ -16,6 +20,8 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 
 import Ionicons from "@expo/vector-icons/Ionicons";
 
+import Moment from 'moment';
+
 const Stack = createStackNavigator();
 
 function HomeScreen() {
@@ -25,7 +31,7 @@ function HomeScreen() {
       axios
         .get("https://api.nasa.gov/planetary/apod", {
           params: {
-            api_key: "QanO544xGGLPtndgU0a68zZEs83Xy70yLBQS886O",
+            api_key: "Q2VIB5h55Hc5b3FchhcKqD1vgHJdDbFnfvfq7A0t",
           },
         })
         .then(function (response) {
@@ -52,19 +58,21 @@ function HomeScreen() {
 
 function ListScreen() {
   let [response, setResponse] = useState([]);
-  const listUrl =
-    "https://api.nasa.gov/planetary/apod?api_key=AvYWVei9BhfrRoU5yrLLfCacbmxVgZhmVXuG0nbJ&start_date=2023-02-15";
 
   React.useEffect(() => {
     axios
-      .get(listUrl)
+      .get("https://api.nasa.gov/planetary/apod", {
+        params: {
+          api_key: "Q2VIB5h55Hc5b3FchhcKqD1vgHJdDbFnfvfq7A0t",
+          start_date: "2023-02-01"
+        },
+      })
       .then(function (response) {
 
         let T_images = [];
 
         response.data.forEach(function (item) {
           T_images.push({
-            id: item.id,
             url: item.url,
             title: item.title,
             explanation: item.explanation,
@@ -79,24 +87,76 @@ function ListScreen() {
         console.log(error);
       });
   }, []);
-  
+
   console.log('item', response.length);
+  let itemHeight = 500
+
+  // modal
+  const [modalVisible, setModalVisible] = React.useState(false);
+  const [activeItem, setActiveItem] = React.useState(null);
+
+  const onPress = (item) => {
+    setActiveItem(item)
+    console.log("activeItem", activeItem)
+    setModalVisible(true)
+  }
 
   return (
     <View style={styles.container}>
       <Text style={styles.viewTitle}>
-        Images du jour {"\n"} (depuis le 15 février 2023) :
+        Images du jour :
       </Text>
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView>
         <FlatList
+          style={styles.flatList}
           data={response}
           renderItem={({item}) => 
-            <View>
-              <Text style={styles.photoTitle}>{item.title}</Text>
-              <Text style={styles.photoExplanation}>{item.explanation}</Text>
-              <Image style={styles.photo} source={{ uri: item.url }} key={item.id} />
+            <View style={[styles.card, styles.shadowProp]}>
+              <TouchableOpacity onPress={()=>onPress(item)}>
+                <Text style={styles.photoDate}>{ Moment(item.date).format('D MMMM y') }</Text>
+                <Text style={styles.photoTitle}>{item.title}</Text>
+                <Image style={styles.photo} source={{ uri: item.url }}/>
+              </TouchableOpacity>
             </View>}
-          keyExtractor={item => item.id}/>
+          keyExtractor={(item, index) => `${item.date + index}`}
+          getItemLayout={(data, index) => (
+            {length: itemHeight, offset: itemHeight * index, index}
+          )}
+
+          onEndReachedThreshold={0.5}
+          onEndReached={({ distanceFromEnd }) => {
+              console.log(
+                  "on end reached ",
+                  distanceFromEnd
+              );
+              
+          }}
+          // progressViewOffset={1}
+        />
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => {
+            Alert.alert('Modal has been closed.');
+            setModalVisible(!modalVisible);
+          }}>
+            {activeItem && (          
+            <View style={styles.centeredView}>
+              <View style={styles.modalView}>
+              <Text style={styles.photoDate}>{ Moment(activeItem.date).format('D MMMM y') }</Text>
+                <Text style={styles.photoTitle}>{activeItem.title}</Text>
+                <Text style={styles.modalText}>{ activeItem.explanation }</Text>
+                <Image style={styles.photo} source={{ uri: activeItem.url }} />
+                <Pressable
+                  style={[styles.button, styles.buttonClose]}
+                  onPress={() => setModalVisible(!modalVisible)}>
+                  <Text style={styles.textStyle}>Hide Modal</Text>
+                </Pressable>
+              </View>
+            </View>)}
+
+        </Modal>
       </SafeAreaView>
     </View>
   );
@@ -150,6 +210,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: "100%",
     color: "#fff",
+    backgroundColor: "#fff",
+    paddingVertical: 20
+  },
+  flatList: {
+    paddingHorizontal: 20,
   },
   title: {
     fontSize: 35,
@@ -160,23 +225,73 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginVertical: 20,
   },
-  scrollView: {
-    width: "100%",
-    paddingHorizontal: 20,
+  card: {
+    backgroundColor: 'white',
+    borderRadius: 8,
+    width: '80%',
+    margin: 30,
+  },
+  shadowProp: {
+    elevation: 15,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
   },
   photo: {
     height: 200,
     width: "100%",
-    margin: 10,
+  },
+  photoDate: {
+    fontSize: 17,
+    textAlign: "center",
+    marginVertical: 5,
   },
   photoTitle: {
-    fontSize: 15,
+    fontSize: 13,
     textAlign: "center",
     marginVertical: 5,
   },
-  photoExplanation: {
-    fontSize: 10,
-    textAlign: "center",
-    marginVertical: 5,
+  // modal
+  centeredView: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 22,
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 35,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  button: {
+    borderRadius: 20,
+    padding: 10,
+    elevation: 2,
+  },
+  buttonOpen: {
+    backgroundColor: '#F194FF',
+  },
+  buttonClose: {
+    backgroundColor: '#2196F3',
+  },
+  textStyle: {
+    color: 'white',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  modalText: {
+    marginBottom: 15,
+    textAlign: 'center',
   },
 });
