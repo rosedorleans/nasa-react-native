@@ -163,7 +163,7 @@ function ListScreen() {
   );
 }
 
-function Nasa() {
+function BasePage() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -195,8 +195,8 @@ export default function App() {
     <NavigationContainer>
       <Stack.Navigator>
         <Stack.Screen
-          name="Nasa"
-          component={Nasa}
+          name="BasePage"
+          component={BasePage}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
