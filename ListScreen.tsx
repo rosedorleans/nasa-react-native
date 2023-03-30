@@ -1,0 +1,226 @@
+import * as React from "react";
+import { useEffect, useState } from "react";
+import { 
+    StyleSheet,
+    View,
+    Text, 
+    SafeAreaView,
+    TouchableOpacity,
+    Pressable,
+    Modal,
+    Alert,
+    FlatList
+} from "react-native";
+import { Image } from "expo-image";
+import axios from "axios";
+
+import Moment from 'moment';
+
+
+export default function ListScreen() {
+    let [response, setResponse] = useState([]);
+  
+    React.useEffect(() => {
+      axios
+        .get("https://api.nasa.gov/planetary/apod", {
+          params: {
+            api_key: "Q2VIB5h55Hc5b3FchhcKqD1vgHJdDbFnfvfq7A0t",
+            start_date: "2023-02-01"
+          },
+        })
+        .then(function (response) {
+  
+          let T_images = [];
+  
+          response.data.forEach(function (item) {
+            T_images.push({
+              url: item.url,
+              title: item.title,
+              explanation: item.explanation,
+                          date: item.date
+            });
+          });
+          T_images = T_images.reverse();
+          console.log(T_images);
+          setResponse(T_images);
+        })
+        .catch(function (error) {
+          console.log(error);
+        });
+    }, []);
+  
+    console.log('item', response.length);
+    let itemHeight = 500
+  
+    // modal
+    const [modalVisible, setModalVisible] = React.useState(false);
+    const [activeItem, setActiveItem] = React.useState(null);
+  
+    const onPress = (item) => {
+      setActiveItem(item)
+      console.log("activeItem", activeItem)
+      setModalVisible(true)
+    }
+  
+    return (
+      <View style={styles.container}>
+        <Text style={styles.viewTitle}>
+          Images du jour :
+        </Text>
+        <SafeAreaView>
+          <FlatList
+            style={styles.flatList}
+            data={response}
+            renderItem={({item}) => 
+              <View style={[styles.card, styles.shadowProp]}>
+                <TouchableOpacity onPress={()=>onPress(item)}>
+                  <Text style={styles.photoDate}>{ Moment(item.date).format('D MMMM y') }</Text>
+                  <Text style={styles.photoTitle}>{item.title}</Text>
+                  <Image style={styles.photo} source={{ uri: item.url }}/>
+                </TouchableOpacity>
+              </View>}
+            keyExtractor={(item, index) => `${item.date + index}`}
+            getItemLayout={(data, index) => (
+              {length: itemHeight, offset: itemHeight * index, index}
+            )}
+  
+            onEndReachedThreshold={0.5}
+            onEndReached={({ distanceFromEnd }) => {
+                console.log(
+                    "on end reached ",
+                    distanceFromEnd
+                );
+                
+            }}
+            // progressViewOffset={1}
+          />
+          <Modal
+            animationType="slide"
+            transparent={true}
+            visible={modalVisible}
+            onRequestClose={() => {
+              Alert.alert('Modal has been closed.');
+              setModalVisible(!modalVisible);
+            }}>
+              {activeItem && (          
+              <View style={styles.centeredView}>
+                <View style={styles.modalView}>
+                <Text style={styles.photoDate}>{ Moment(activeItem.date).format('D MMMM y') }</Text>
+                  <Text style={styles.photoTitle}>{activeItem.title}</Text>
+                  <Text style={styles.modalText}>{ activeItem.explanation }</Text>
+                  {console.log(activeItem)}
+                  <Image style={styles.modalPhoto} source={{ uri: activeItem.url }}/>
+                  <Pressable
+                    style={[styles.button, styles.buttonClose]}
+                    onPress={() => setModalVisible(!modalVisible)}>
+                    <Text style={styles.textStyle}>Fermer</Text>
+                  </Pressable>
+                </View>
+              </View>)}
+  
+          </Modal>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
+  
+const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      width: "100%",
+      color: "#fff",
+      backgroundColor: "#fff",
+      paddingVertical: 20
+    },
+    flatList: {
+      paddingHorizontal: 20,
+    },
+    title: {
+      fontSize: 35,
+      color: "#fff",
+    },
+    viewTitle: {
+      fontSize: 20,
+      textAlign: "center",
+      marginVertical: 20,
+    },
+    card: {
+      backgroundColor: 'white',
+      borderRadius: 8,
+      width: '80%',
+      margin: 30,
+    },
+    shadowProp: {
+      elevation: 15,
+      shadowColor: '#000',
+      shadowOffset: {width: 0, height: 4},
+      shadowOpacity: 0.2,
+      shadowRadius: 3,
+    },
+    photo: {
+      height: 200,
+      width: "100%",
+    },
+    photoDate: {
+      fontSize: 17,
+      textAlign: "center",
+      marginVertical: 5,
+    },
+    photoTitle: {
+      fontSize: 13,
+      textAlign: "center",
+      marginVertical: 5,
+    },
+    // modal
+    centeredView: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginTop: 22,
+    },
+    modalView: {
+      margin: 20,
+      backgroundColor: 'white',
+      borderRadius: 20,
+      padding: 35,
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+      elevation: 5,
+    },
+    button: {
+      borderRadius: 20,
+      padding: 10,
+      elevation: 2,
+    },
+    buttonOpen: {
+      backgroundColor: '#F194FF',
+    },
+    buttonClose: {
+      backgroundColor: '#2196F3',
+    },
+    textStyle: {
+      color: 'white',
+      fontSize: 12,
+      fontWeight: 'bold',
+      textAlign: 'center',
+    },
+    modalText: {
+      fontSize: 8,
+      textAlign: 'center',
+    },
+    modalPhoto: {
+      height: 400,
+      width: 350,
+      margin: 20
+    },
+});
+  
